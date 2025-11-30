@@ -1,8 +1,10 @@
-from django.shortcuts import render
-"""Модуль - основа сайта, отображает список постов,
-конкретные посты и категории постов."""
+from typing import Union
 
-posts = [
+from django.shortcuts import render
+from django.http import Http404
+
+
+posts: list[dict[str, Union[int, str]]] = [
     {
         'id': 0,
         'location': 'Остров отчаянья',
@@ -45,20 +47,24 @@ posts = [
     },
 ]
 
+main_posts = {post['id']: post for post in posts}
+
 
 def index(request):
-    """Отображает список постов на главной странице."""
-    return render(request, 'posts/index.html', context={'posts': posts})
+    template_name = 'blog/index.html'
+    context = {'posts': posts[::-1]}
+    return render(request, template_name, context)
 
 
-def post_detail(request, id):
-    """Отображает конкретный пост."""
-    for post in posts:
-        if post['id'] == id:
-            return render(request, 'posts/detail.html', {'post': post})
-    return render(request, 'posts/detail.html', {})
+def post_detail(request, post_id):
+    template_name = 'blog/detail.html'
+    if post_id not in main_posts:
+        raise Http404('Страница не найдена!')
+    context = {'post': main_posts[post_id]}
+    return render(request, template_name, context)
 
 
 def category_posts(request, category_slug):
-    """Отображает список постов по категории."""
-    return render(request, 'posts/category.html', {"category": category_slug})
+    template_name = 'blog/category.html'
+    context = {'category': category_slug}
+    return render(request, template_name, context)
